@@ -7,7 +7,7 @@ import DataTable from '../components/DataTable.vue'
 import EmptyState from '../components/EmptyState.vue'
 import MessageBar from '../components/MessageBar.vue'
 import StatusBadge from '../components/StatusBadge.vue'
-import { makeupStatuses, makeupTransitions, subjects } from '../constants/options'
+import { makeupStatuses, makeupNextStatus, subjects } from '../constants/options'
 
 const makeups = ref([])
 const loading = ref(false)
@@ -20,11 +20,6 @@ const form = reactive({
   scheduledDate: '',
   notes: ''
 })
-
-function nextStatuses(current) {
-  const allowed = makeupTransitions[current] || []
-  return [current, ...allowed]
-}
 
 const columns = [
   { key: 'studentName', label: '学员' },
@@ -153,7 +148,8 @@ onMounted(loadMakeups)
         </template>
         <template #actions="{ row }">
           <select class="compact-select" :value="row.status" @change="updateMakeup(row, { status: $event.target.value })">
-            <option v-for="status in nextStatuses(row.status)" :key="status">{{ status }}</option>
+            <option :value="row.status">{{ row.status }}</option>
+            <option v-for="status in makeupNextStatus[row.status]" :key="status">{{ status }}</option>
           </select>
         </template>
       </DataTable>

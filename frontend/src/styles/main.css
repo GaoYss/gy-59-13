@@ -292,6 +292,7 @@ th {
 }
 
 .status-badge[data-status='合格'],
+.status-badge[data-status='已通过'],
 .status-badge[data-status='已完成'],
 .status-badge[data-status='已确认'] {
   background: #e4f6ec;
@@ -310,8 +311,8 @@ th {
 }
 
 .status-badge[data-status='已安排'] {
-  background: #e0f0ff;
-  color: #1a5fb4;
+  background: #e0ecff;
+  color: #1d4ed8;
 }
 
 .message-bar {

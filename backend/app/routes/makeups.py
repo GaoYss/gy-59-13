@@ -7,15 +7,6 @@ from ..models import Makeup
 
 makeups_bp = Blueprint("makeups", __name__, url_prefix="/api/makeups")
 
-VALID_STATUSES = ("待安排", "已安排", "已完成", "已取消")
-
-TRANSITIONS = {
-    "待安排": ("已安排", "已取消"),
-    "已安排": ("已完成", "已取消"),
-    "已完成": (),
-    "已取消": (),
-}
-
 
 def parse_date(value):
     if not value:
@@ -47,21 +38,27 @@ def create_makeup():
     if scheduled_date == "invalid":
         return jsonify({"message": "补考日期格式应为 YYYY-MM-DD"}), 400
 
-    initial_status = "待安排"
-    if payload.get("status") and payload["status"] != initial_status:
-        return jsonify({"message": "新建补考状态只能为「待安排」"}), 400
-
     makeup = Makeup(
         student_name=payload["studentName"].strip(),
         original_subject=payload["originalSubject"],
         failed_score=int(payload["failedScore"]),
         scheduled_date=scheduled_date,
-        status=initial_status,
+        status="待安排",
         notes=payload.get("notes"),
     )
     db.session.add(makeup)
     db.session.commit()
     return jsonify(makeup.to_dict()), 201
+
+
+MAKEUP_VALID_STATUSES = {"待安排", "已安排", "已完成", "已取消"}
+
+MAKEUP_TRANSITIONS = {
+    "待安排": {"已安排", "已取消"},
+    "已安排": {"已完成", "已取消"},
+    "已完成": set(),
+    "已取消": set(),
+}
 
 
 @makeups_bp.patch("/<int:makeup_id>")
@@ -76,12 +73,10 @@ def update_makeup(makeup_id):
         makeup.scheduled_date = scheduled_date
     if "status" in payload:
         new_status = payload["status"]
-        if new_status not in VALID_STATUSES:
+        if new_status not in MAKEUP_VALID_STATUSES:
             return jsonify({"message": "无效补考状态"}), 400
-        if new_status not in TRANSITIONS.get(makeup.status, ()):
-            return jsonify({"message": f"「{makeup.status}」不可变更为「{new_status}」"}), 400
-        if new_status == "已安排" and not makeup.scheduled_date and "scheduledDate" not in payload:
-            return jsonify({"message": "安排补考前须设定补考日期"}), 400
+        if new_status not in MAKEUP_TRANSITIONS.get(makeup.status, set()):
+            return jsonify({"message": f"不允许从「{makeup.status}」切换到「{new_status}」"}), 400
         makeup.status = new_status
     if "notes" in payload:
         makeup.notes = payload["notes"]

@@ -11,7 +11,7 @@ export const appointmentStatuses = ['已预约', '已确认', '已取消', '已�
 
 export const makeupStatuses = ['待安排', '已安排', '已完成', '已取消']
 
-export const makeupTransitions = {
+export const makeupNextStatus = {
   '待安排': ['已安排', '已取消'],
   '已安排': ['已完成', '已取消'],
   '已完成': [],
